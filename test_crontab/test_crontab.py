@@ -1,11 +1,17 @@
-import json
-import os.path
+import os
 from pathlib import Path
-cron_path = os.path.abspath(Path(__file__).parent / "cron.json")
 
-with open("./test_crontab/cron.json", "r", encoding="utf-8") as fopen:
-    data = json.load(fopen)
-    data[0] = data[0] + 1
+from crontab import CronTab
 
-with open(cron_path, "w", encoding="utf-8") as fopen:
-    json.dump(data, fopen)
+parent_abs_dir = Path(os.path.abspath(Path(__file__).parent))
+log_path = parent_abs_dir / "cronlog.log"
+
+if not os.path.exists(log_path):
+    with open(log_path, "w", encoding="utf-8") as fopen:
+        fopen.write("")
+
+cron = CronTab(os.environ.get("USERNAME"))
+job = cron.new(command=str(parent_abs_dir / "crontabs.sh"))
+job.minute.every(1)
+cron.write()
+
