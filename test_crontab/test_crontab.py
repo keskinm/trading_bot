@@ -11,7 +11,7 @@ if not os.path.exists(log_path):
         fopen.write("")
 
 cron = CronTab(os.environ.get("USERNAME"))
-job = cron.new(command=str(parent_abs_dir / "crontabs.sh"))
+job = cron.new(command="sh " + str(parent_abs_dir / "crontabs.sh"))
 job.minute.every(1)
 cron.write()
 
