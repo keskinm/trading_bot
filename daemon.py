@@ -225,3 +225,83 @@ class Daemon(object):
         daemonized by start() or restart().
         """
         raise NotImplementedError
+
+
+class TesteableDaemon(Daemon):
+    """
+    Testeable Daemon.
+    """
+    def __init__(self, pidfile):
+        super().__init__(pidfile)
+
+    def daemonize(self):
+        """
+        Do the UNIX double-fork magic, see Stevens' "Advanced
+        Programming in the UNIX Environment" for details (ISBN 0201563177)
+        http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
+        """
+        if self.use_eventlet:
+            import eventlet.tpool
+            eventlet.tpool.killall()
+
+        pid = os.fork()
+        if pid > 0:
+            # Exit first parent
+            pass
+
+        else:
+            # Decouple from parent environment
+            os.chdir(self.home_dir)
+            os.setsid()
+            os.umask(self.umask)
+
+            # Do second fork
+            pid = os.fork()
+            if pid > 0:
+                # Exit from second parent
+                pass
+
+            else:
+                if sys.platform != 'darwin':  # This block breaks on OS X
+                    # Redirect standard file descriptors
+                    sys.stdout.flush()
+                    sys.stderr.flush()
+                    si = open(self.stdin, 'r')
+                    so = open(self.stdout, 'a+')
+                    if self.stderr:
+                        try:
+                            se = open(self.stderr, 'a+', 0)
+                        except ValueError:
+                            # Python 3 can't have unbuffered text I/O
+                            se = open(self.stderr, 'a+', 1)
+                    else:
+                        se = so
+
+                def sigtermhandler(signum, frame):
+                    self.daemon_alive = False
+                    sys.exit()
+
+                if self.use_gevent:
+                    import gevent
+                    gevent.reinit()
+                    gevent.signal(signal.SIGTERM, sigtermhandler, signal.SIGTERM, None)
+                    gevent.signal(signal.SIGINT, sigtermhandler, signal.SIGINT, None)
+                else:
+                    signal.signal(signal.SIGTERM, sigtermhandler)
+                    signal.signal(signal.SIGINT, sigtermhandler)
+
+                self.log("Started")
+
+                # Write pidfile
+                atexit.register(
+                    self.delpid)  # Make sure pid file is removed if we quit
+                pid = str(os.getpid())
+                open(self.pidfile, 'w+').write("%s\n" % pid)
+
+    def run(self):
+        """
+        You should override this method when you subclass Daemon.
+        It will be called after the process has been
+        daemonized by start() or restart().
+        """
+        raise NotImplementedError
