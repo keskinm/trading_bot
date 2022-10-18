@@ -262,21 +262,6 @@ class TesteableDaemon(Daemon):
                 pass
 
             else:
-                if sys.platform != 'darwin':  # This block breaks on OS X
-                    # Redirect standard file descriptors
-                    sys.stdout.flush()
-                    sys.stderr.flush()
-                    si = open(self.stdin, 'r')
-                    so = open(self.stdout, 'a+')
-                    if self.stderr:
-                        try:
-                            se = open(self.stderr, 'a+', 0)
-                        except ValueError:
-                            # Python 3 can't have unbuffered text I/O
-                            se = open(self.stderr, 'a+', 1)
-                    else:
-                        se = so
-
                 def sigtermhandler(signum, frame):
                     self.daemon_alive = False
                     sys.exit()

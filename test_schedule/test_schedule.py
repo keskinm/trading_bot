@@ -23,7 +23,7 @@ def create_increase_value_file_path(values_file_path):
 
 
 def increase_value(values_file_path):
-    time.sleep(2)
+    time.sleep(0.5)
     with open(values_file_path, "r", encoding="utf-8") as fopen:
         data = json.load(fopen)
         data[0] = data[0] + 1
@@ -39,7 +39,7 @@ class IncreaseValues(TesteableDaemon):
         self.values_file_path = values_file_path
 
     def at_finish_cb(self):
-        time.sleep(3)
+        time.sleep(1)
         with open(self.values_file_path, "r", encoding="utf-8") as fopen:
             final_value = json.load(fopen)
         assert final_value > self.initial_value
@@ -63,21 +63,22 @@ class ScheduledIncreaseValue(TesteableDaemon):
         self.values_file_path = values_file_path
 
     def at_finish_cb(self):
-        time.sleep(3)
+        time.sleep(1)
         with open(self.values_file_path, "r", encoding="utf-8") as fopen:
             final_value = json.load(fopen)
         assert final_value > self.initial_value
-        with open(self.pidfile, "r", encoding="utf-8") as fopen:
-            to_kill_pid = int(fopen.readlines()[-1])
-            if psutil.pid_exists(to_kill_pid):
-                # Should be done by Daemon if child finished (won't be done if infinite loop !)
-                os.kill(to_kill_pid, signal.SIGTERM)
-            assert psutil.pid_exists(to_kill_pid)
+        # with open(self.pidfile, "r", encoding="utf-8") as fopen:
+        #     to_kill_pid = int(fopen.readlines()[-1])
+        #     if psutil.pid_exists(to_kill_pid):
+        #         # Should be done by Daemon if child finished (won't be done if infinite loop !)
+        #         os.kill(to_kill_pid, signal.SIGTERM)
+        #     assert psutil.pid_exists(to_kill_pid)
 
     def run(self):
         schedule.every(1).seconds.do(increase_value, values_file_path=self.values_file_path)
 
-        for i in range(10):
+        t_end = time.time() + 5
+        while time.time() < t_end:
             schedule.run_pending()
         self.at_finish_cb()
 
@@ -91,11 +92,11 @@ def test_increase_values():
     b_runner.start()
 
 
-# def test_scheduled_increase_values():
-#     values_file_path = Path(os.path.abspath(Path(__file__).parent / "test_scheduled_increase_value.json"))
-#     pid_file_path = os.path.abspath(Path(__file__).parent / "to_kill_ids" / "test_scheduled_increase_values.txt")
-#
-#     b_runner = ScheduledIncreaseValue(pidfile=pid_file_path, values_file_path=values_file_path)
-#     b_runner.start()
+def test_scheduled_increase_values():
+    values_file_path = Path(os.path.abspath(Path(__file__).parent / "test_scheduled_increase_value.json"))
+    pid_file_path = os.path.abspath(Path(__file__).parent / "to_kill_ids" / "test_scheduled_increase_values.txt")
 
-test_increase_values()
+    b_runner = ScheduledIncreaseValue(pidfile=pid_file_path, values_file_path=values_file_path)
+    b_runner.start()
+
+test_scheduled_increase_values()
