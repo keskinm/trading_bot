@@ -38,7 +38,7 @@ class ScheduledIncreaseValue(Daemon):
         super().__init__(pidfile)
 
     def run(self):
-        schedule.every(1).seconds.do(increase_value())
+        schedule.every(1).seconds.do(increase_value)
 
         while True:
             schedule.run_pending()
@@ -52,6 +52,3 @@ def test_increase_values():
 def test_scheduled_increase_values():
     b_runner = ScheduledIncreaseValue(pidfile="./to_kill_ids.txt")
     b_runner.start()
-
-
-test_scheduled_increase_values()
