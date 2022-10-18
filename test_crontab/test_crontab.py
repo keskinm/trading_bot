@@ -31,4 +31,4 @@ def test_crontab():
         assert json.load(fopen)[0] > initial_value
 
     assert os.path.getsize(log_path)
-    cron.remove_all()
+    cron.remove(job)
