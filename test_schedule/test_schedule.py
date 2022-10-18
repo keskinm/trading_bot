@@ -60,7 +60,11 @@ class IncreaseValues(AdvancedDaemon):
 
     def run(self):
         for i in range(10):
-            increase_value(self.values_file_path)
+            try:
+                increase_value(self.values_file_path)
+            except BaseException as e:
+                self.trace_back.append(e)
+
         self.at_finish_cb()
 
 
@@ -87,7 +91,11 @@ class ScheduledIncreaseValue(AdvancedDaemon):
 
         t_end = time.time() + 5
         while time.time() < t_end:
-            schedule.run_pending()
+            try:
+                schedule.run_pending()
+            except BaseException as e:
+                self.trace_back.append(e)
+
         self.at_finish_cb()
 
 
@@ -106,5 +114,3 @@ def test_scheduled_increase_values():
 
     b_runner = ScheduledIncreaseValue(pidfile=pid_file_path, values_file_path=values_file_path)
     b_runner.start()
-
-test_scheduled_increase_values()

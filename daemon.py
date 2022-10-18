@@ -233,6 +233,7 @@ class AdvancedDaemon(Daemon):
     """
     def __init__(self, pidfile):
         super().__init__(pidfile)
+        self.trace_back = []
 
     def daemonize(self):
         """
