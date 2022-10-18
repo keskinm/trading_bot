@@ -8,7 +8,7 @@ import schedule
 
 import time
 
-from daemon import Daemon, TesteableDaemon
+from daemon import Daemon, AdvancedDaemon
 
 
 def create_increase_value_file_path(values_file_path):
@@ -27,12 +27,20 @@ def increase_value(values_file_path):
     with open(values_file_path, "r", encoding="utf-8") as fopen:
         data = json.load(fopen)
         data[0] = data[0] + 1
+        # try:
+        #     data = json.load(fopen)
+        #     data[0] = data[0] + 1
+        # except json.decoder.JSONDecodeError as err:
+        #     x = fopen.readlines()
+        #     print("DATA", x)
+        #     time.sleep(10000)
+        #     raise ValueError
 
     with open(values_file_path, "w", encoding="utf-8") as fopen:
         json.dump(data, fopen)
 
 
-class IncreaseValues(TesteableDaemon):
+class IncreaseValues(AdvancedDaemon):
     def __init__(self, pidfile, values_file_path):
         super().__init__(pidfile)
         self.initial_value = create_increase_value_file_path(values_file_path)
@@ -56,7 +64,7 @@ class IncreaseValues(TesteableDaemon):
         self.at_finish_cb()
 
 
-class ScheduledIncreaseValue(TesteableDaemon):
+class ScheduledIncreaseValue(AdvancedDaemon):
     def __init__(self, pidfile, values_file_path):
         super().__init__(pidfile)
         self.initial_value = create_increase_value_file_path(values_file_path)

@@ -227,9 +227,9 @@ class Daemon(object):
         raise NotImplementedError
 
 
-class TesteableDaemon(Daemon):
+class AdvancedDaemon(Daemon):
     """
-    Testeable Daemon.
+    Testeable and loggeable Daemon.
     """
     def __init__(self, pidfile):
         super().__init__(pidfile)
