@@ -9,7 +9,7 @@ import pytest
 increase_value_file_path = os.path.abspath(Path(__file__).parent / "cron.json")
 
 
-@pytest.mark.skipif(os.getenv("skip_long_tests"), reason="requires python3.10 or higher")
+@pytest.mark.skipif(os.getenv("skip_long_tests"), reason="Skipping long tests.")
 def test_crontab():
     parent_abs_dir = Path(os.path.abspath(Path(__file__).parent))
     log_path = parent_abs_dir / "cronlog.log"
