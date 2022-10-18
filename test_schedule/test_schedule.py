@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 from pathlib import Path
 
 import schedule
@@ -55,23 +56,35 @@ class ScheduledIncreaseValue(Daemon):
 def test_increase_values():
     values_file_path = Path(os.path.abspath(Path(__file__).parent / "test_increase_value.json"))
     initial_value = create_increase_value_file_path(values_file_path)
-    b_runner = IncreaseValues(pidfile="./to_kill_ids.txt", values_file_path=values_file_path)
+
+    pid_file_path = os.path.abspath(Path(__file__).parent / "to_kill_ids" / "test_increase_values.txt")
+
+    b_runner = IncreaseValues(pidfile=pid_file_path, values_file_path=values_file_path)
     b_runner.start()
     time.sleep(3)
     with open(values_file_path, "r", encoding="utf-8") as fopen:
         final_value = json.load(fopen)
     assert final_value > initial_value
+
+    with open(pid_file_path, "r", encoding="utf-8") as fopen:
+        to_kill_pid = fopen.readlines()[-1]
+    subprocess.run([f'kill -9 {to_kill_pid}'], stdout=subprocess.PIPE, universal_newlines=True)
 
 
 def test_scheduled_increase_values():
     values_file_path = Path(os.path.abspath(Path(__file__).parent / "test_scheduled_increase_value.json"))
+    pid_file_path = os.path.abspath(Path(__file__).parent / "to_kill_ids" / "test_scheduled_increase_values.txt")
+
     initial_value = create_increase_value_file_path(values_file_path)
-    b_runner = ScheduledIncreaseValue(pidfile="./to_kill_ids.txt", values_file_path=values_file_path)
+    b_runner = ScheduledIncreaseValue(pidfile=pid_file_path, values_file_path=values_file_path)
     b_runner.start()
     time.sleep(3)
     with open(values_file_path, "r", encoding="utf-8") as fopen:
         final_value = json.load(fopen)
     assert final_value > initial_value
 
+    with open(pid_file_path, "r", encoding="utf-8") as fopen:
+        to_kill_pid = fopen.readlines()[-1]
+    subprocess.run([f'kill -9 {to_kill_pid}'], stdout=subprocess.PIPE, universal_newlines=True)
 
-test_scheduled_increase_values()
+test_increase_values()
