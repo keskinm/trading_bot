@@ -1,9 +1,9 @@
-from strategies.grid_spot_usd.strategy_plain import run
+from strategies.grid_spot_usd.simul_strategy import run
 import schedule
 import time
 
 
-schedule.every(1).seconds.do(run)
+schedule.every(10).seconds.do(run)
 
 
 while True:

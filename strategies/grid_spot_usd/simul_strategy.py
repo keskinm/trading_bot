@@ -117,3 +117,6 @@ class SimulatedGridTrader(GridTrader):
             json.dump(self.simulated_exchange, outfile)
 
 
+def run():
+    SimulatedGridTrader().run()
+
