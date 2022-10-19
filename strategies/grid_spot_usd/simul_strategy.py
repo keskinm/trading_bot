@@ -135,17 +135,23 @@ class Consumer:
 
         for idx, to_consume in enumerate(self.simulated_exchange["orders"]):
 
-            if to_consume["side"] == "buy" and current_price >= to_consume["price"]:
-                self.coin1_balance += to_consume["amount"]
-                self.coin2_balance -= to_consume["price"] * to_consume["amount"]
-                self.simulated_exchange["orders"][idx]["consumed"] = True
-                any_consumed = True
+            if to_consume["side"] == "buy" and current_price <= to_consume["price"]:
+                if self.coin2_balance < to_consume["price"] * to_consume["amount"]:
+                    print(f"Not enough coin2 to buy coin 1.")
+                else:
+                    self.coin1_balance += to_consume["amount"]
+                    self.coin2_balance -= to_consume["price"] * to_consume["amount"]
+                    self.simulated_exchange["orders"][idx]["consumed"] = True
+                    any_consumed = True
 
-            if to_consume["side"] == "sell" and current_price <= to_consume["price"]:
-                self.coin1_balance -= to_consume["amount"]
-                self.coin2_balance += to_consume["price"] * to_consume["amount"]
-                self.simulated_exchange["orders"][idx]["consumed"] = True
-                any_consumed = True
+            if to_consume["side"] == "sell" and current_price >= to_consume["price"]:
+                if self.coin1_balance < to_consume["amount"]:
+                    print("Not enough coin1 to sell.")
+                else:
+                    self.coin1_balance -= to_consume["amount"]
+                    self.coin2_balance += to_consume["price"] * to_consume["amount"]
+                    self.simulated_exchange["orders"][idx]["consumed"] = True
+                    any_consumed = True
 
         self.simulated_exchange["orders"] = list(filter(lambda x: x["consumed"]==False, self.simulated_exchange["orders"]))
 
