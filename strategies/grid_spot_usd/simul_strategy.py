@@ -19,6 +19,11 @@ class SimulatedGridTrader(GridTrader):
         self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
 
     def run(self):
+        while True:
+            self._run()
+            time.sleep(30)
+
+    def _run(self):
         now = datetime.now()
         print(now.strftime("%d-%m %H:%M:%S"))
 
