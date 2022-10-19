@@ -23,10 +23,10 @@ class GridTrader:
         account_to_select = "account1"
 
         self.exchange = SpotFtx(
-            apiKey=secret[account_to_select]["apiKey"],
-            secret=secret[account_to_select]["secret"],
-            subAccountName=secret[account_to_select]["subAccountName"],
-        )
+                apiKey=secret[account_to_select]["apiKey"],
+                secret=secret[account_to_select]["secret"],
+                subAccountName=secret[account_to_select]["subAccountName"],
+            )
 
         self.coin1 = "DOGE"
         self.coin2 = "USD"

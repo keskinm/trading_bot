@@ -5,6 +5,7 @@ import pandas as pd
 from strategies.grid_spot_usd.strategy import GridTrader
 from datetime import datetime
 import json
+import time
 
 
 class SimulatedGridTrader(GridTrader):
@@ -17,7 +18,6 @@ class SimulatedGridTrader(GridTrader):
             self.simulated_exchange = json.load(fopen)
         self.coin1_balance = self.simulated_exchange["balances"]["coin1"]
         self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
-        self.consumer = Consumer(self.simulated_exchange_file_path, self.simulated_exchange)
 
     def run(self):
         now = datetime.now()
@@ -70,8 +70,12 @@ class SimulatedGridTrader(GridTrader):
                 self.simulated_exchange["orders"].append({"price": price, "amount": amount, "side": "sell", "consumed": False})
 
         self.write_last_data()
-        self.consumer.consume_orders()
-        self.consumer.write_exchange()
+
+        consumer = Consumer(self.simulated_exchange_file_path, self.simulated_exchange["orders"], self.exchange, self.symbol)
+
+        time.sleep(10)
+        consumer.consume_orders()
+        consumer.write_exchange()
 
     def consumed_grid(self, current_price):
         grid_buy, grid_sell = self.custom_grid(
@@ -90,7 +94,7 @@ class SimulatedGridTrader(GridTrader):
             self.simulated_exchange["orders"].append({"price": sell, "amount": amount, "side": "sell", "consumed": False})
 
     def write_last_data(self):
-        df_order = pd.DataFrame(self.orders_list)
+        df_order = pd.DataFrame(self.simulated_exchange["orders"])
 
         if df_order.empty == False:
             self.last_data["number_of_buy_orders"] = len(df_order.loc[df_order["side"] == "buy"])
@@ -107,7 +111,9 @@ class SimulatedGridTrader(GridTrader):
 
 
 class Consumer:
-    def __init__(self, simulated_exchange_file_path, simulated_exchange):
+    def __init__(self, simulated_exchange_file_path, simulated_exchange, exchange, symbol):
+        self.exchange = exchange
+        self.symbol = symbol
         self.simulated_exchange = simulated_exchange
         self.simulated_exchange_file_path = simulated_exchange_file_path
 
@@ -115,18 +121,18 @@ class Consumer:
         self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
 
     def consume_orders(self):
-        nb_consume = random.randint(0, len(self.simulated_exchange["orders"]))
-        for idx in range(nb_consume):
-            consumed = self.simulated_exchange["orders"][idx]
+        current_price = self.exchange.get_bid_ask_price(self.symbol)["bid"]
 
-            if consumed["side"] == "buy":
-                self.coin1_balance += consumed["amount"]
-                self.coin2_balance -= consumed["price"] * consumed["amount"]
+        for idx, to_consume in enumerate(self.simulated_exchange["orders"]):
+
+            if to_consume["side"] == "buy" and current_price >= to_consume["price"]:
+                self.coin1_balance += to_consume["amount"]
+                self.coin2_balance -= to_consume["price"] * to_consume["amount"]
                 self.simulated_exchange["orders"][idx]["consumed"] = True
 
-            if consumed["side"] == "sell":
-                self.coin1_balance -= consumed["amount"]
-                self.coin2_balance += consumed["price"] * consumed["amount"]
+            if to_consume["side"] == "sell" and current_price <= to_consume["price"]:
+                self.coin1_balance -= to_consume["amount"]
+                self.coin2_balance += to_consume["price"] * to_consume["amount"]
                 self.simulated_exchange["orders"][idx]["consumed"] = True
 
         self.simulated_exchange["orders"] = list(filter(lambda x: x["consumed"]==True, self.simulated_exchange["orders"]))
