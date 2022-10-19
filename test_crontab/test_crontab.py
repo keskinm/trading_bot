@@ -37,3 +37,4 @@ def test_crontab():
 
     assert os.path.getsize(log_path)
     cron.remove(job)
+    cron.write()
