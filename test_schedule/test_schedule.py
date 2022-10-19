@@ -27,14 +27,16 @@ def increase_value(values_file_path):
     with open(values_file_path, "r", encoding="utf-8") as fopen:
         data = json.load(fopen)
         data[0] = data[0] + 1
-        # try:
-        #     data = json.load(fopen)
-        #     data[0] = data[0] + 1
-        # except json.decoder.JSONDecodeError as err:
-        #     x = fopen.readlines()
-        #     print("DATA", x)
-        #     time.sleep(10000)
-        #     raise ValueError
+        """
+        try:
+            data = json.load(fopen)
+            data[0] = data[0] + 1
+        except json.decoder.JSONDecodeError as err:
+            x = fopen.readlines()
+            print("DATA", x)
+            time.sleep(10000)
+            raise ValueError
+        """
 
     with open(values_file_path, "w", encoding="utf-8") as fopen:
         json.dump(data, fopen)
