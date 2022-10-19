@@ -1,7 +1,5 @@
 import json
 import os
-import signal
-import psutil
 from pathlib import Path
 
 import schedule
