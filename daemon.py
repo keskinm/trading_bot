@@ -29,6 +29,7 @@ class Daemon(object):
         self.use_gevent = use_gevent
         self.use_eventlet = use_eventlet
         os.makedirs(os.path.dirname(self.pidfile), exist_ok=True)
+        self.trace_back = []
 
     def log(self, *args):
         if self.verbose >= 1:
@@ -227,13 +228,12 @@ class Daemon(object):
         raise NotImplementedError
 
 
-class AdvancedDaemon(Daemon):
+class NonExitingDaemon(Daemon):
     """
-    Testeable and loggeable Daemon.
+    Daemon not exiting parents.
     """
     def __init__(self, pidfile):
         super().__init__(pidfile)
-        self.trace_back = []
 
     def daemonize(self):
         """

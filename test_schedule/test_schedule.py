@@ -8,7 +8,7 @@ import schedule
 
 import time
 
-from daemon import Daemon, AdvancedDaemon
+from daemon import Daemon, NonExitingDaemon
 
 
 def create_increase_value_file_path(values_file_path):
@@ -40,7 +40,7 @@ def increase_value(values_file_path):
         json.dump(data, fopen)
 
 
-class IncreaseValues(AdvancedDaemon):
+class IncreaseValues(NonExitingDaemon):
     def __init__(self, pidfile, values_file_path):
         super().__init__(pidfile)
         self.initial_value = create_increase_value_file_path(values_file_path)
@@ -63,12 +63,14 @@ class IncreaseValues(AdvancedDaemon):
             try:
                 increase_value(self.values_file_path)
             except BaseException as e:
-                self.trace_back.append(e)
+                self.trace_back.append(repr(e))
 
         self.at_finish_cb()
+        with open(Path(os.path.abspath(Path(__file__).parent / "increase_value_logs.json")), "w", encoding="utf-8") as fopen:
+            json.dump(self.trace_back, fopen)
 
 
-class ScheduledIncreaseValue(AdvancedDaemon):
+class ScheduledIncreaseValue(NonExitingDaemon):
     def __init__(self, pidfile, values_file_path):
         super().__init__(pidfile)
         self.initial_value = create_increase_value_file_path(values_file_path)
@@ -94,9 +96,11 @@ class ScheduledIncreaseValue(AdvancedDaemon):
             try:
                 schedule.run_pending()
             except BaseException as e:
-                self.trace_back.append(e)
+                self.trace_back.append(repr(e))
 
         self.at_finish_cb()
+        with open(Path(os.path.abspath(Path(__file__).parent / "scheduled_increase_value_logs.json")), "w", encoding="utf-8") as fopen:
+            json.dump(self.trace_back, fopen)
 
 
 def test_increase_values():
@@ -114,3 +118,5 @@ def test_scheduled_increase_values():
 
     b_runner = ScheduledIncreaseValue(pidfile=pid_file_path, values_file_path=values_file_path)
     b_runner.start()
+
+
