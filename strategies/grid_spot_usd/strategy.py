@@ -9,6 +9,12 @@ import json
 
 class GridTrader:
     def __init__(self, last_data_file_path=None):
+
+        self.last_data = None
+        self.orders_list = None
+        self.coin2_balance = None
+        self.coin1_balance = None
+
         if last_data_file_path is None:
             last_data_file_path = Path(os.path.abspath(Path(__file__).parent)) / "data" / "last_data.json"
 
@@ -28,14 +34,7 @@ class GridTrader:
         self.coin1 = "DOGE"
         self.coin2 = "USD"
         self.symbol = f"{self.coin1}/{self.coin2}"
-        self.coin1_balance = self.exchange.get_detail_balance_of_one_coin(self.coin1)["free"]
-        self.coin2_balance = self.exchange.get_detail_balance_of_one_coin(self.coin2)["free"]
-
         self.total_orders = 10
-
-        self.orders_list = []
-        for order in self.exchange.get_open_order():
-            self.orders_list.append(order["info"])
 
     @staticmethod
     def custom_grid(
@@ -58,6 +57,13 @@ class GridTrader:
     def run(self):
         now = datetime.now()
         print(now.strftime("%d-%m %H:%M:%S"))
+
+        self.coin1_balance = self.exchange.get_detail_balance_of_one_coin(self.coin1)["free"]
+        self.coin2_balance = self.exchange.get_detail_balance_of_one_coin(self.coin2)["free"]
+
+        self.orders_list = []
+        for order in self.exchange.get_open_order():
+            self.orders_list.append(order["info"])
 
         with open(self.last_data_file_path, "r", encoding="utf-8") as fopen:
             self.last_data = json.load(fopen)

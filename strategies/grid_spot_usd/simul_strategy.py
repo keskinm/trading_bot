@@ -11,18 +11,18 @@ class SimulatedGridTrader(GridTrader):
     def __init__(self):
         last_data_file_path = Path(os.path.abspath(Path(__file__).parent)) / "data"/ "simulated_last_data.json"
         super().__init__(last_data_file_path=last_data_file_path)
-
         self.simulated_exchange_file_path = Path(os.path.abspath(Path(__file__).parent)) / "data" / "simulated_exchange.json"
-        with open(self.simulated_exchange_file_path, "r", encoding="utf-8") as fopen:
-            self.simulated_exchange = json.load(fopen)
-        self.coin1_balance = self.simulated_exchange["balances"]["coin1"]
-        self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
 
     def run(self):
         while True:
             self._run()
 
     def _run(self):
+        with open(self.simulated_exchange_file_path, "r", encoding="utf-8") as fopen:
+            self.simulated_exchange = json.load(fopen)
+        self.coin1_balance = self.simulated_exchange["balances"]["coin1"]
+        self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
+
         with open(self.last_data_file_path, "r", encoding="utf-8") as fopen:
             self.last_data = json.load(fopen)
 
