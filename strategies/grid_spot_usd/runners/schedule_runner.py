@@ -1,4 +1,4 @@
-from strategies.grid_spot_usd.simul_strategy import run
+from strategies.grid_spot_usd.strategy import run
 import schedule
 import time
 

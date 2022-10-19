@@ -72,9 +72,11 @@ class SimulatedGridTrader(GridTrader):
 
         consumer = Consumer(self.simulated_exchange_file_path, self.simulated_exchange, self.exchange, self.symbol)
 
-        time.sleep(10)
-        consumer.consume_orders()
-        consumer.write_exchange()
+        while True:
+            time.sleep(1)
+            any_consumed = consumer.consume_orders()
+            if any_consumed:
+                consumer.write_exchange()
 
     def consumed_grid(self, current_price):
         grid_buy, grid_sell = self.custom_grid(
@@ -117,6 +119,8 @@ class Consumer:
         self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
 
     def consume_orders(self):
+        any_consumed = False
+
         current_price = self.exchange.get_bid_ask_price(self.symbol)["bid"]
 
         for idx, to_consume in enumerate(self.simulated_exchange["orders"]):
@@ -125,13 +129,16 @@ class Consumer:
                 self.coin1_balance += to_consume["amount"]
                 self.coin2_balance -= to_consume["price"] * to_consume["amount"]
                 self.simulated_exchange["orders"][idx]["consumed"] = True
+                any_consumed = True
 
             if to_consume["side"] == "sell" and current_price <= to_consume["price"]:
                 self.coin1_balance -= to_consume["amount"]
                 self.coin2_balance += to_consume["price"] * to_consume["amount"]
                 self.simulated_exchange["orders"][idx]["consumed"] = True
+                any_consumed = True
 
         self.simulated_exchange["orders"] = list(filter(lambda x: x["consumed"]==False, self.simulated_exchange["orders"]))
+        return any_consumed
 
     def write_exchange(self):
         self.simulated_exchange["balances"]["coin1"] = self.coin1_balance
@@ -141,6 +148,4 @@ class Consumer:
             json.dump(self.simulated_exchange, outfile)
 
 
-def run():
-    SimulatedGridTrader().run()
-
+SimulatedGridTrader().run()

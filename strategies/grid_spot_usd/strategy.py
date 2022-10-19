@@ -154,3 +154,7 @@ class GridTrader:
             self.last_data["number_of_sell_orders"] = 0
         with open(self.last_data_file_path, "w") as outfile:
             json.dump(self.last_data, outfile)
+
+
+def run():
+    GridTrader().run()
