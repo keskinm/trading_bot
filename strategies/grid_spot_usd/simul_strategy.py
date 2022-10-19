@@ -131,7 +131,7 @@ class Consumer:
                 self.coin2_balance += to_consume["price"] * to_consume["amount"]
                 self.simulated_exchange["orders"][idx]["consumed"] = True
 
-        self.simulated_exchange["orders"] = list(filter(lambda x: x["consumed"]==True, self.simulated_exchange["orders"]))
+        self.simulated_exchange["orders"] = list(filter(lambda x: x["consumed"]==False, self.simulated_exchange["orders"]))
 
     def write_exchange(self):
         self.simulated_exchange["balances"]["coin1"] = self.coin1_balance
