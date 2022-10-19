@@ -2,7 +2,7 @@ import json
 import os.path
 from pathlib import Path
 
-increase_value_file_path = os.path.abspath(Path(__file__).parent / "cron.json")
+increase_value_file_path = os.path.abspath(Path(__file__).parent / "increase_value.json")
 
 with open(increase_value_file_path, "r", encoding="utf-8") as fopen:
     data = json.load(fopen)
