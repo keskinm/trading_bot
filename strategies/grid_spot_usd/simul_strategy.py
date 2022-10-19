@@ -70,7 +70,7 @@ class SimulatedGridTrader(GridTrader):
 
         self.write_last_data()
 
-        consumer = Consumer(self.simulated_exchange_file_path, self.simulated_exchange["orders"], self.exchange, self.symbol)
+        consumer = Consumer(self.simulated_exchange_file_path, self.simulated_exchange, self.exchange, self.symbol)
 
         time.sleep(10)
         consumer.consume_orders()
@@ -104,9 +104,6 @@ class SimulatedGridTrader(GridTrader):
 
         with open(self.last_data_file_path, "w") as outfile:
             json.dump(self.last_data, outfile)
-
-        with open(self.simulated_exchange_file_path, "w") as outfile:
-            json.dump(self.simulated_exchange, outfile)
 
 
 class Consumer:
