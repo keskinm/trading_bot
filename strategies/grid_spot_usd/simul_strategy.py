@@ -1,5 +1,4 @@
 import os.path
-import random
 from pathlib import Path
 import pandas as pd
 from strategies.grid_spot_usd.strategy import GridTrader
