@@ -23,6 +23,9 @@ class SimulatedGridTrader(GridTrader):
             self._run()
 
     def _run(self):
+        with open(self.last_data_file_path, "r", encoding="utf-8") as fopen:
+            self.last_data = json.load(fopen)
+
         now = datetime.now()
         print(now.strftime("%d-%m %H:%M:%S"))
 
@@ -78,7 +81,7 @@ class SimulatedGridTrader(GridTrader):
 
         t_end = time.time() + 30
         while time.time() < t_end:
-            time.sleep(2)
+            time.sleep(15)
             any_consumed = consumer.consume_orders()
             if any_consumed:
                 consumer.write_exchange()

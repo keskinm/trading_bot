@@ -14,9 +14,6 @@ class GridTrader:
 
         self.last_data_file_path = last_data_file_path
 
-        with open(self.last_data_file_path, "r", encoding="utf-8") as fopen:
-            self.last_data = json.load(fopen)
-
         with open("./secret.json", "r", encoding="utf-8") as fopen:
             secret = json.load(fopen)
 
@@ -61,6 +58,9 @@ class GridTrader:
     def run(self):
         now = datetime.now()
         print(now.strftime("%d-%m %H:%M:%S"))
+
+        with open(self.last_data_file_path, "r", encoding="utf-8") as fopen:
+            self.last_data = json.load(fopen)
 
         try:
             current_price = self.exchange.get_bid_ask_price(self.symbol)["bid"]
