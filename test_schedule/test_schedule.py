@@ -94,8 +94,8 @@ def t_increase_values():
     A mysterious JSONDecode Error is appearing.
     Test of this function is duplicated with multiple pass/fail (maybe making
     multiple other function tests also).
-    Please prefer to test daemonized jobs
-    with run().
+    Please prefer to test daemonized jobs with run(), inheriting classic
+    parent process exiting Daemon class.
     """
     work_dir_path = Path(os.path.abspath(Path(__file__).parent / "test_increase_values"))
 
