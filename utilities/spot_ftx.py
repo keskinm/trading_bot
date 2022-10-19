@@ -91,7 +91,7 @@ class SpotFtx():
             ticker = self._session.fetchTicker(symbol)
         except BaseException as err:
             print("An error occured @ get_bid_ask_price", err)
-            exit()
+            raise err
         return {"bid": ticker["bid"], "ask": ticker["ask"]}
 
     def get_min_order_amount(self, symbol):

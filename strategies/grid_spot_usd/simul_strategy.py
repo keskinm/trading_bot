@@ -78,7 +78,7 @@ class SimulatedGridTrader(GridTrader):
 
         t_end = time.time() + 30
         while time.time() < t_end:
-            time.sleep(1)
+            time.sleep(2)
             any_consumed = consumer.consume_orders()
             if any_consumed:
                 consumer.write_exchange()
@@ -126,7 +126,11 @@ class Consumer:
     def consume_orders(self):
         any_consumed = False
 
-        current_price = self.exchange.get_bid_ask_price(self.symbol)["bid"]
+        try:
+            current_price = self.exchange.get_bid_ask_price(self.symbol)["bid"]
+        except BaseException as err:
+            print("An error occured @ simul_strategy @ Consumer @ consume_order", err, "but routine continues.")
+            return any_consumed
 
         for idx, to_consume in enumerate(self.simulated_exchange["orders"]):
 

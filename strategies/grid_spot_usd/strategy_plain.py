@@ -44,7 +44,11 @@ def run():
     coin2 = "USD"
     total_orders = 10
 
-    current_price = ftx.get_bid_ask_price(symbol)["bid"]
+    try:
+        current_price = ftx.get_bid_ask_price(symbol)["bid"]
+    except BaseException as err:
+        print("An error occured @ get bid ask @ strategy_plain @ run", err)
+        exit()
 
     orders_list = []
     for order in ftx.get_open_order():

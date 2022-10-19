@@ -62,7 +62,11 @@ class GridTrader:
         now = datetime.now()
         print(now.strftime("%d-%m %H:%M:%S"))
 
-        current_price = self.exchange.get_bid_ask_price(self.symbol)["bid"]
+        try:
+            current_price = self.exchange.get_bid_ask_price(self.symbol)["bid"]
+        except BaseException as err:
+            print("An error occured @ get bid ask @ strategy @ run", err)
+            exit()
 
         df_order = pd.DataFrame(self.orders_list)
 
