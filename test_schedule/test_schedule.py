@@ -119,6 +119,3 @@ def test_scheduled_increase_values():
 
     b_runner = ScheduledIncreaseValue(work_dir_path=work_dir_path)
     b_runner.start()
-
-
-test_increase_values()
