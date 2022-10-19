@@ -17,7 +17,7 @@ class SimulatedGridTrader(GridTrader):
             self.simulated_exchange = json.load(fopen)
         self.coin1_balance = self.simulated_exchange["balances"]["coin1"]
         self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
-        self.consumer = Consumer()
+        self.consumer = Consumer(self.simulated_exchange_file_path, self.simulated_exchange)
 
     def run(self):
         now = datetime.now()
@@ -30,8 +30,6 @@ class SimulatedGridTrader(GridTrader):
 
         if df_order.empty == False:
             df_order["price"] = pd.to_numeric(df_order["price"])
-            # df_order["size"] = pd.to_numeric(df_order["size"])
-        # print(df_order)
 
         coin1_balance = self.exchange.get_detail_balance_of_one_coin(self.coin1)["free"]
         coin2_balance = self.exchange.get_detail_balance_of_one_coin(self.coin2)["free"]
@@ -64,12 +62,12 @@ class SimulatedGridTrader(GridTrader):
             for i in range(buy_order_to_create):
                 amount = (coin2_balance / current_price) / buy_order_to_create
                 price = current_price - diff_buy * (i + 1)
-                self.simulated_exchange["orders"].append({"price": price, "amount": amount, "side": "buy"})
+                self.simulated_exchange["orders"].append({"price": price, "amount": amount, "side": "buy", "consumed": False})
 
             for i in range(sell_order_to_create):
                 amount = coin1_balance / sell_order_to_create
                 price = current_price + diff_sell * (i + 1)
-                self.simulated_exchange["orders"].append({"price": price, "amount": amount, "side": "sell"})
+                self.simulated_exchange["orders"].append({"price": price, "amount": amount, "side": "sell", "consumed": False})
 
         self.write_last_data()
         self.consumer.consume_orders()
@@ -85,11 +83,11 @@ class SimulatedGridTrader(GridTrader):
         )
         for buy in grid_buy:
             amount = (self.coin2_balance / buy) / len(grid_buy)
-            self.simulated_exchange["orders"].append({"price": buy, "amount": amount, "side": "buy"})
+            self.simulated_exchange["orders"].append({"price": buy, "amount": amount, "side": "buy", "consumed": False})
 
         for sell in grid_sell:
             amount = self.coin1_balance / len(grid_sell)
-            self.simulated_exchange["orders"].append({"price": sell, "amount": amount, "side": "sell"})
+            self.simulated_exchange["orders"].append({"price": sell, "amount": amount, "side": "sell", "consumed": False})
 
     def write_last_data(self):
         df_order = pd.DataFrame(self.orders_list)
@@ -109,33 +107,29 @@ class SimulatedGridTrader(GridTrader):
 
 
 class Consumer:
-    def __init__(self):
-        self.simulated_exchange = None
-        self.simulated_exchange_file_path = Path(
-            os.path.abspath(Path(__file__).parent)) / "data" / "simulated_exchange.json"
+    def __init__(self, simulated_exchange_file_path, simulated_exchange):
+        self.simulated_exchange = simulated_exchange
+        self.simulated_exchange_file_path = simulated_exchange_file_path
 
-        with open(self.simulated_exchange_file_path, "r", encoding="utf-8") as fopen:
-            self.simulated_exchange = json.load(fopen)
         self.coin1_balance = self.simulated_exchange["balances"]["coin1"]
         self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
 
     def consume_orders(self):
-        consumed_orders = []
-
         nb_consume = random.randint(0, len(self.simulated_exchange["orders"]))
         for idx in range(nb_consume):
             consumed = self.simulated_exchange["orders"][idx]
-            consumed_orders.append(consumed)
 
             if consumed["side"] == "buy":
                 self.coin1_balance += consumed["amount"]
                 self.coin2_balance -= consumed["price"] * consumed["amount"]
+                self.simulated_exchange["orders"][idx]["consumed"] = True
 
             if consumed["side"] == "sell":
                 self.coin1_balance -= consumed["amount"]
                 self.coin2_balance += consumed["price"] * consumed["amount"]
+                self.simulated_exchange["orders"][idx]["consumed"] = True
 
-        self.simulated_exchange["orders"] = list(set(self.simulated_exchange["orders"]) - set(consumed_orders))
+        self.simulated_exchange["orders"] = list(filter(lambda x: x["consumed"]==True, self.simulated_exchange["orders"]))
 
     def write_exchange(self):
         self.simulated_exchange["balances"]["coin1"] = self.coin1_balance
