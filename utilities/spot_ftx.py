@@ -90,9 +90,9 @@ class SpotFtx():
         try:
             ticker = self._session.fetchTicker(symbol)
         except BaseException as err:
-            print("An error occured", err)
+            print("An error occured @ get_bid_ask_price", err)
             exit()
-        return {"bid":ticker["bid"],"ask":ticker["ask"]}
+        return {"bid": ticker["bid"], "ask": ticker["ask"]}
 
     def get_min_order_amount(self, symbol):
         return self._session.markets_by_id[symbol]["info"]["minProvideSize"]
@@ -151,7 +151,7 @@ class SpotFtx():
         try:
             allBalance = self._session.fetchBalance()
         except BaseException as err:
-            print("An error occured", err)
+            print("An error occured @ get_detail_balance_of_one_coin", err)
             exit()
         try:
             return allBalance[coin]

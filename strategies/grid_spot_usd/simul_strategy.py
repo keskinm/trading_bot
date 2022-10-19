@@ -21,7 +21,6 @@ class SimulatedGridTrader(GridTrader):
     def run(self):
         while True:
             self._run()
-            time.sleep(30)
 
     def _run(self):
         now = datetime.now()
@@ -77,7 +76,8 @@ class SimulatedGridTrader(GridTrader):
 
         consumer = Consumer(self.simulated_exchange_file_path, self.simulated_exchange, self.exchange, self.symbol)
 
-        while True:
+        t_end = time.time() + 30
+        while time.time() < t_end:
             time.sleep(1)
             any_consumed = consumer.consume_orders()
             if any_consumed:
