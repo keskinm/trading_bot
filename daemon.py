@@ -5,6 +5,7 @@ import os
 import signal
 import sys
 import time
+from pathlib import Path
 
 
 class Daemon(object):
@@ -14,21 +15,25 @@ class Daemon(object):
     A generic daemon class.
     Usage: subclass the Daemon class and override the run() method
     """
-    def __init__(self, pidfile, stdin=os.devnull,
+    def __init__(self, work_dir_path, stdin=os.devnull,
                  stdout=os.devnull, stderr=os.devnull,
                  home_dir='.', umask=0o22, verbose=1,
                  use_gevent=False, use_eventlet=False):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
-        self.pidfile = pidfile
+
+        os.makedirs(work_dir_path, exist_ok=True)
+        self.work_dir_path = work_dir_path
+        self.pid_file_path = str(Path(work_dir_path) / "pid.txt")
+        self.log_file_path = str(Path(work_dir_path) / "logs.txt")
+
         self.home_dir = home_dir
         self.verbose = verbose
         self.umask = umask
         self.daemon_alive = True
         self.use_gevent = use_gevent
         self.use_eventlet = use_eventlet
-        os.makedirs(os.path.dirname(self.pidfile), exist_ok=True)
         self.trace_back = []
 
     def log(self, *args):
@@ -107,14 +112,14 @@ class Daemon(object):
         atexit.register(
             self.delpid)  # Make sure pid file is removed if we quit
         pid = str(os.getpid())
-        open(self.pidfile, 'w+').write("%s\n" % pid)
+        open(self.pid_file_path, 'w+').write("%s\n" % pid)
 
     def delpid(self):
         try:
             # the process may fork itself again
-            pid = int(open(self.pidfile, 'r').read().strip())
+            pid = int(open(self.pid_file_path, 'r').read().strip())
             if pid == os.getpid():
-                os.remove(self.pidfile)
+                os.remove(self.pid_file_path)
         except OSError as e:
             if e.errno == errno.ENOENT:
                 pass
@@ -130,7 +135,7 @@ class Daemon(object):
 
         # Check for a pidfile to see if the daemon already runs
         try:
-            pf = open(self.pidfile, 'r')
+            pf = open(self.pid_file_path, 'r')
             pid = int(pf.read().strip())
             pf.close()
         except IOError:
@@ -140,7 +145,7 @@ class Daemon(object):
 
         if pid:
             message = "pidfile %s already exists. Is it already running?\n"
-            sys.stderr.write(message % self.pidfile)
+            sys.stderr.write(message % self.pid_file_path)
             sys.exit(1)
 
         # Start the daemon
@@ -160,12 +165,12 @@ class Daemon(object):
 
         if not pid:
             message = "pidfile %s does not exist. Not running?\n"
-            sys.stderr.write(message % self.pidfile)
+            sys.stderr.write(message % self.pid_file_path)
 
             # Just to be sure. A ValueError might occur if the PID file is
             # empty but does actually exist
-            if os.path.exists(self.pidfile):
-                os.remove(self.pidfile)
+            if os.path.exists(self.pid_file_path):
+                os.remove(self.pid_file_path)
 
             return  # Not an error in a restart
 
@@ -180,8 +185,8 @@ class Daemon(object):
                     os.kill(pid, signal.SIGHUP)
         except OSError as err:
             if err.errno == errno.ESRCH:
-                if os.path.exists(self.pidfile):
-                    os.remove(self.pidfile)
+                if os.path.exists(self.pid_file_path):
+                    os.remove(self.pid_file_path)
             else:
                 print(str(err))
                 sys.exit(1)
@@ -197,7 +202,7 @@ class Daemon(object):
 
     def get_pid(self):
         try:
-            pf = open(self.pidfile, 'r')
+            pf = open(self.pid_file_path, 'r')
             pid = int(pf.read().strip())
             pf.close()
         except IOError:
@@ -232,8 +237,8 @@ class NonExitingDaemon(Daemon):
     """
     Daemon not exiting parents.
     """
-    def __init__(self, pidfile):
-        super().__init__(pidfile)
+    def __init__(self, work_dir_path):
+        super().__init__(work_dir_path)
 
     def daemonize(self):
         """
@@ -282,7 +287,7 @@ class NonExitingDaemon(Daemon):
                 atexit.register(
                     self.delpid)  # Make sure pid file is removed if we quit
                 pid = str(os.getpid())
-                open(self.pidfile, 'w+').write("%s\n" % pid)
+                open(self.pid_file_path, 'w+').write("%s\n" % pid)
 
     def run(self):
         """

@@ -41,8 +41,9 @@ def increase_value(values_file_path):
 
 
 class IncreaseValues(NonExitingDaemon):
-    def __init__(self, pidfile, values_file_path):
-        super().__init__(pidfile)
+    def __init__(self, work_dir_path):
+        super().__init__(work_dir_path=work_dir_path)
+        values_file_path = work_dir_path / "test_increase_value.json"
         self.initial_value = create_increase_value_file_path(values_file_path)
         self.values_file_path = values_file_path
 
@@ -66,13 +67,15 @@ class IncreaseValues(NonExitingDaemon):
                 self.trace_back.append(repr(e))
 
         self.at_finish_cb()
-        with open(Path(os.path.abspath(Path(__file__).parent / "increase_value_logs.json")), "w", encoding="utf-8") as fopen:
-            json.dump(self.trace_back, fopen)
+        with open(self.log_file_path, "a", encoding="utf-8") as fopen:
+            for err_msg in self.trace_back:
+                fopen.write(f"{err_msg}\n\n-------------------------\n\n")
 
 
 class ScheduledIncreaseValue(NonExitingDaemon):
-    def __init__(self, pidfile, values_file_path):
-        super().__init__(pidfile)
+    def __init__(self, work_dir_path):
+        super().__init__(work_dir_path=work_dir_path)
+        values_file_path = work_dir_path / "test_scheduled_increase_value.json"
         self.initial_value = create_increase_value_file_path(values_file_path)
         self.values_file_path = values_file_path
 
@@ -99,24 +102,23 @@ class ScheduledIncreaseValue(NonExitingDaemon):
                 self.trace_back.append(repr(e))
 
         self.at_finish_cb()
-        with open(Path(os.path.abspath(Path(__file__).parent / "scheduled_increase_value_logs.json")), "w", encoding="utf-8") as fopen:
-            json.dump(self.trace_back, fopen)
+        with open(self.log_file_path, "a", encoding="utf-8") as fopen:
+            for err_msg in self.trace_back:
+                fopen.write(f"{err_msg}\n\n-------------------------\n\n")
 
 
 def test_increase_values():
-    values_file_path = Path(os.path.abspath(Path(__file__).parent / "test_increase_value.json"))
+    work_dir_path = Path(os.path.abspath(Path(__file__).parent / "test_increase_values"))
 
-    pid_file_path = os.path.abspath(Path(__file__).parent / "to_kill_ids" / "test_increase_values.txt")
-
-    b_runner = IncreaseValues(pidfile=pid_file_path, values_file_path=values_file_path)
+    b_runner = IncreaseValues(work_dir_path=work_dir_path)
     b_runner.start()
 
 
 def test_scheduled_increase_values():
-    values_file_path = Path(os.path.abspath(Path(__file__).parent / "test_scheduled_increase_value.json"))
-    pid_file_path = os.path.abspath(Path(__file__).parent / "to_kill_ids" / "test_scheduled_increase_values.txt")
+    work_dir_path = Path(os.path.abspath(Path(__file__).parent / "test_scheduled_increase_values"))
 
-    b_runner = ScheduledIncreaseValue(pidfile=pid_file_path, values_file_path=values_file_path)
+    b_runner = ScheduledIncreaseValue(work_dir_path=work_dir_path)
     b_runner.start()
 
 
+test_increase_values()
