@@ -235,7 +235,7 @@ class Daemon(object):
 
 class NonExitingDaemon(Daemon):
     """
-    Daemon not exiting parents.
+    Daemon not exiting parents for test purposes.
     """
     def __init__(self, work_dir_path):
         super().__init__(work_dir_path)
