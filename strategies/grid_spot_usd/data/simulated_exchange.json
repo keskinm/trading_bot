@@ -1,4 +1,1 @@
-{
-  "balances":  {"coin1":  1600, "coin2":  100},
-  "orders": []
-}
+{"balances": {"coin1": 1600, "coin2": 100}, "orders": []}

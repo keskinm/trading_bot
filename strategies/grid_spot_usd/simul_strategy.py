@@ -1,4 +1,5 @@
 import os.path
+import random
 from pathlib import Path
 import pandas as pd
 from strategies.grid_spot_usd.strategy import GridTrader
@@ -11,16 +12,12 @@ class SimulatedGridTrader(GridTrader):
         last_data_file_path = Path(os.path.abspath(Path(__file__).parent)) / "data"/ "simulated_last_data.json"
         super().__init__(last_data_file_path=last_data_file_path)
 
-        self.simulated_exchange = None
         self.simulated_exchange_file_path = Path(os.path.abspath(Path(__file__).parent)) / "data" / "simulated_exchange.json"
-        # overrides
-        self.simulate_orders()
-
-    def simulate_orders(self):
         with open(self.simulated_exchange_file_path, "r", encoding="utf-8") as fopen:
             self.simulated_exchange = json.load(fopen)
         self.coin1_balance = self.simulated_exchange["balances"]["coin1"]
         self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
+        self.consumer = Consumer()
 
     def run(self):
         now = datetime.now()
@@ -33,7 +30,7 @@ class SimulatedGridTrader(GridTrader):
 
         if df_order.empty == False:
             df_order["price"] = pd.to_numeric(df_order["price"])
-            df_order["size"] = pd.to_numeric(df_order["size"])
+            # df_order["size"] = pd.to_numeric(df_order["size"])
         # print(df_order)
 
         coin1_balance = self.exchange.get_detail_balance_of_one_coin(self.coin1)["free"]
@@ -67,18 +64,16 @@ class SimulatedGridTrader(GridTrader):
             for i in range(buy_order_to_create):
                 amount = (coin2_balance / current_price) / buy_order_to_create
                 price = current_price - diff_buy * (i + 1)
-                self.simulated_exchange["balances"]["coin1"] += amount
-                self.simulated_exchange["balances"]["coin2"] -= price * amount
                 self.simulated_exchange["orders"].append({"price": price, "amount": amount, "side": "buy"})
 
             for i in range(sell_order_to_create):
                 amount = coin1_balance / sell_order_to_create
                 price = current_price + diff_sell * (i + 1)
-                self.simulated_exchange["balances"]["coin1"] -= amount
-                self.simulated_exchange["balances"]["coin2"] += price * amount
                 self.simulated_exchange["orders"].append({"price": price, "amount": amount, "side": "sell"})
 
         self.write_last_data()
+        self.consumer.consume_orders()
+        self.consumer.write_exchange()
 
     def consumed_grid(self, current_price):
         grid_buy, grid_sell = self.custom_grid(
@@ -90,14 +85,10 @@ class SimulatedGridTrader(GridTrader):
         )
         for buy in grid_buy:
             amount = (self.coin2_balance / buy) / len(grid_buy)
-            self.simulated_exchange["balances"]["coin1"] += amount
-            self.simulated_exchange["balances"]["coin2"] -= buy*amount
             self.simulated_exchange["orders"].append({"price": buy, "amount": amount, "side": "buy"})
 
         for sell in grid_sell:
             amount = self.coin1_balance / len(grid_sell)
-            self.simulated_exchange["balances"]["coin1"] -= amount
-            self.simulated_exchange["balances"]["coin2"] += sell*amount
             self.simulated_exchange["orders"].append({"price": sell, "amount": amount, "side": "sell"})
 
     def write_last_data(self):
@@ -112,6 +103,43 @@ class SimulatedGridTrader(GridTrader):
 
         with open(self.last_data_file_path, "w") as outfile:
             json.dump(self.last_data, outfile)
+
+        with open(self.simulated_exchange_file_path, "w") as outfile:
+            json.dump(self.simulated_exchange, outfile)
+
+
+class Consumer:
+    def __init__(self):
+        self.simulated_exchange = None
+        self.simulated_exchange_file_path = Path(
+            os.path.abspath(Path(__file__).parent)) / "data" / "simulated_exchange.json"
+
+        with open(self.simulated_exchange_file_path, "r", encoding="utf-8") as fopen:
+            self.simulated_exchange = json.load(fopen)
+        self.coin1_balance = self.simulated_exchange["balances"]["coin1"]
+        self.coin2_balance = self.simulated_exchange["balances"]["coin2"]
+
+    def consume_orders(self):
+        consumed_orders = []
+
+        nb_consume = random.randint(0, len(self.simulated_exchange["orders"]))
+        for idx in range(nb_consume):
+            consumed = self.simulated_exchange["orders"][idx]
+            consumed_orders.append(consumed)
+
+            if consumed["side"] == "buy":
+                self.coin1_balance += consumed["amount"]
+                self.coin2_balance -= consumed["price"] * consumed["amount"]
+
+            if consumed["side"] == "sell":
+                self.coin1_balance -= consumed["amount"]
+                self.coin2_balance += consumed["price"] * consumed["amount"]
+
+        self.simulated_exchange["orders"] = list(set(self.simulated_exchange["orders"]) - set(consumed_orders))
+
+    def write_exchange(self):
+        self.simulated_exchange["balances"]["coin1"] = self.coin1_balance
+        self.simulated_exchange["balances"]["coin2"] = self.coin2_balance
 
         with open(self.simulated_exchange_file_path, "w") as outfile:
             json.dump(self.simulated_exchange, outfile)
